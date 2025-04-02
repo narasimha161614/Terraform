@@ -1,0 +1,54 @@
+provider "aws" {
+  region = "us-east-1"  # Change the region as needed
+}
+
+resource "aws_s3_bucket" "my_bucket" {
+  bucket = "my-narasimha-1345"  # Ensure it's globally unique
+
+  tags = {
+    Name        = "MyBucket"
+    Environment = "Dev"
+  }
+}
+
+resource "aws_s3_bucket_versioning" "version_control" {
+  bucket = aws_s3_bucket.my_bucket.id
+  versioning_configuration {
+    status = "Suspended"
+  }
+}
+
+resource "aws_s3_bucket_public_access_block" "block_access" {
+  bucket = aws_s3_bucket.my_bucket.id
+
+  block_public_acls = false
+  block_public_policy = false
+  ignore_public_acls = false
+
+}
+
+resource "aws_s3_bucket_server_side_encryption_configuration" "encryption" {
+  bucket = aws_s3_bucket.my_bucket.id
+
+  rule {
+     apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+
+resource "aws_s3_bucket_policy" "public_read_policy" {
+  bucket = aws_s3_bucket.my_bucket.id
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Effect = "Allow"
+        Principal = "*"
+        Action = "s3:GetObject"
+        Resource = "arn:aws:s3:::${aws_s3_bucket.my_bucket.id}/*"
+      }
+    ]
+  })
+}
