@@ -1,0 +1,25 @@
+create an instance and attach:
+resource "aws_instance" "my_ec2" {
+  instance_type = "t2.micro"
+  ami = "ami-0efc43a4067fe9a3e"
+  subnet_id = aws_subnet.my_subnet.id
+  key_name = "ohio"
+  vpc_security_group_ids = [aws_security_group.my_sg.id]
+  associate_public_ip_address = true
+
+  provisioner "remote-exec" {
+    inline = [
+      "sudo yum update -y",
+      "sudo yum install git -y",
+      "touch ansible.txt",
+      "echo 'This is sample force' > ansible.txt"
+    ]
+  }
+
+ connection {
+   user = "ec2-user"
+   type = "ssh"
+   private_key = file("/home/ec2-user/Terraform/Terraform/key/my_key.pem")
+   host = self.public_ip
+ }
+}
